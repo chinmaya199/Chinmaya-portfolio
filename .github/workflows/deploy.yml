@@ -1,0 +1,35 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main  # Change to your default branch if necessary
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # Change to your required Node.js version
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Deploy to Lightsail
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        LIGHTSAIL_IP: ${{ secrets.LIGHTSAIL_IP }}
+      run: |
+        echo "$SSH_PRIVATE_KEY" > private_key.pem
+        chmod 600 private_key.pem
+        rsync -avr -e "ssh -i private_key.pem -o StrictHostKeyChecking=no" --exclude='.git' --exclude='node_modules' . ubuntu@$LIGHTSAIL_IP:/home/ubuntu/<YOUR_REPO_DIRECTORY>/
+        ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$LIGHTSAIL_IP "cd /home/ubuntu/<YOUR_REPO_DIRECTORY> && npm install && npm run build && pm2 restart all"
