@@ -1,44 +1,133 @@
-// @flow strict
+'use client'; // Mark this component as a client component
 
-import { personalData } from "../../utils/data/personal-data";
-import BlogCard from "../components/homepage/blog/blog-card";
+import React, { useEffect, useState } from 'react';
 
-async function getBlogs() {
-  const res = await fetch(`https://dev.to/api/articles?username=${personalData.devUsername}`)
+const Page = () => {
+  const [rotation, setRotation] = useState(0);
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch data')
-  }
+  useEffect(() => {
+    const animationFrame = requestAnimationFrame(() => {
+      setRotation(prevRotation => (prevRotation + 1) % 360);
+    });
 
-  const data = await res.json();
-  return data;
-};
+    return () => cancelAnimationFrame(animationFrame);
+  }, [rotation]);
 
-async function page() {
-  const blogs = await getBlogs();
+  const bannerStyle = {
+    width: '100%',
+    height: '100vh',
+    textAlign: 'center',
+    overflow: 'hidden',
+    position: 'relative'
+  };
+
+  const sliderStyle = {
+    position: 'absolute',
+    width: '200px',
+    height: '250px',
+    top: '10%',
+    left: 'calc(50% - 100px)',
+    transformStyle: 'preserve-3d',
+    transform: `perspective(1000px) rotateX(-16deg) rotateY(${rotation}deg)`,
+    zIndex: 2
+  };
+
+  const contentStyle = {
+    position: 'absolute',
+    bottom: 0,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'min(1400px, 100vw)',
+    height: 'max-content',
+    paddingBottom: '100px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 1
+  };
+
+  const headingStyle = {
+    fontFamily: "'ICA Rubrik'",
+    fontSize: '16em',
+    lineHeight: '1em',
+    color: '#25283B',
+    position: 'relative'
+  };
+
+  const authorStyle = {
+    fontFamily: 'Poppins',
+    textAlign: 'right',
+    maxWidth: '200px'
+  };
+
+  const authorHeadingStyle = {
+    fontSize: '3em'
+  };
+
+  const modelStyle = {
+    backgroundImage: "url('/assets/images/model.png')",
+    width: '100%',
+    height: '75vh',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    backgroundSize: 'auto 130%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'top center',
+    zIndex: 1
+  };
 
   return (
-    <div className="py-8">
-      <div className="flex justify-center my-5 lg:py-8">
-        <div className="flex  items-center">
-          <span className="w-24 h-[2px] bg-[#1a1443]"></span>
-          <span className="bg-[#1a1443] w-fit text-white p-2 px-5 text-2xl rounded-md">
-            All Blog
-          </span>
-          <span className="w-24 h-[2px] bg-[#1a1443]"></span>
-        </div>
+    <div className="banner" style={bannerStyle}>
+      <div className="slider" style={{...sliderStyle, '--quantity': 10}}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((position) => (
+          <div 
+            key={position} 
+            className="item" 
+            style={{ 
+              position: 'absolute', 
+              inset: '0 0 0 0', 
+              transform: `rotateY(calc((${position} - 1) * (360 / 10) * 1deg)) translateZ(550px)`,
+              '--position': position 
+            }}
+          >
+            <img 
+              src={`/assets/images/dragon_${position}.jpg`} 
+              alt={`Dragon ${position}`} 
+              style={{
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover'
+              }} 
+            />
+          </div>
+        ))}
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 lg:gap-8 xl:gap-10">
-        {
-          blogs.map((blog, i) => (
-            blog?.cover_image &&
-            <BlogCard blog={blog} key={i} />
-          ))
-        }
+      <div className="content" style={contentStyle}>
+        <h1 
+          data-content="CSS ONLY" 
+          style={{
+            ...headingStyle,
+            position: 'relative',
+            '::after': {
+              position: 'absolute',
+              inset: '0 0 0 0',
+              content: 'attr(data-content)',
+              zIndex: 2,
+              WebkitTextStroke: '2px #d2d2d2',
+              color: 'transparent'
+            }
+          }}
+        >
+        </h1>
+        <div 
+          className="model" 
+          style={modelStyle} 
+        />
       </div>
     </div>
   );
 };
 
-export default page;
+export default Page;
